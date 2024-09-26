@@ -10,133 +10,153 @@ eipm_post <- readRDS("eIPMPost.rds")
 
 # Create UI
 ui <- dashboardPage(
-  dashboardHeader(title = "Early ICAHT Prediction"),
+  
+  title = "Early ICAHT Prediction",
+  
+  dashboardHeader(
+    title = tags$a(
+      href='https://hutchdatascience.org',
+      tags$img(
+        src='assets/fhLogo.png',
+        height='35px',
+        width='155px'
+      )
+    )
+  ),
   
   # Sidebar with menu items
-  dashboardSidebar(sidebarMenu(
-    menuItem("Home", tabName = "home"),
-    menuItem("eIPMPre", tabName = "eipm_pre"),
-    menuItem("eIPMPost", tabName = "eipm_post")
-  )),
+  dashboardSidebar(
+    sidebarMenu(
+    menuItem("Home", tabName = "home", icon = icon("book")),
+    menuItem("eIPMPre", tabName = "eipm_pre", icon = icon("calculator")),
+    menuItem("eIPMPost", tabName = "eipm_post", icon = icon("calculator"))
+  )
+  ),
   
   # Tab items
-  dashboardBody(tabItems(
-    # Home tab
-    tabItem(
-      tabName = "home",
-      h4(
-        "The Early ICAHT Prediction Models (eIPMs) allow you to predict a
-          patient's probability of developing grade 3-4 early ICAHT based on pre-lymphodepletion (eIPMPre)
-          and/or early post-infusion (eIPMPost) factors. Based on the models described in Liang et al., 2024."
-      )
-    ),
+  dashboardBody(
     
-    # eIPMPre tab
-    tabItem(
-      tabName = "eipm_pre",
-      box(valueBoxOutput("eipm_pre_prediction", width = 12)),
-      box(selectInput(
-        "disease_cat",
-        label = "Disease Type",
-        choices = c("ALL", "Other")
-      )),
-      box(
-        sliderInput(
-          "anc_pre_ld",
-          label = "Pre-lymphodepletion ANC (x 10^9/L)",
-          value = 1.5,
-          min = 0.7,
-          max = 8,
-          step = 0.1
-        )
-      ),
-      box(
-        sliderInput(
-          "plt_pre_ld",
-          label = "Pre-lymphodepletion platelet count (x 10^9/L)",
-          value = 200,
-          min = 25,
-          max = 290,
-          step = 5
-        )
-      ),
-      box(
-        sliderInput(
-          "ldh_pre_ld",
-          label = "Pre-lymphodepletion LDH (U/L)",
-          value = 250,
-          min = 115,
-          max = 645,
-          step = 5
-        )
-      ),
-      box(
-        sliderInput(
-          "ferritin_pre_ld",
-          label = "Pre-lymphodepletion ferritin (ng/mL)",
-          value = 300,
-          min = 30,
-          max = 3900,
-          step = 5
-        )
-      ),
-      box(
-        "Input values are limited to those within the 5th-95th percentiles of the training dataset."
-      )
-    ),
+    includeCSS("www/hutch_theme.css"),
     
-    # eIPMPost tab
-    tabItem(
-      tabName = "eipm_post",
-      box(valueBoxOutput("eipm_post_prediction", width = 12)),
-      box(selectInput(
-        "disease_cat",
-        label = "Disease Type",
-        choices = c("ALL", "Other")
-      )),
-      box(
-        sliderInput(
-          "anc_pre_ld",
-          label = "Pre-lymphodepletion ANC (x 10^9/L)",
-          value = 1.5,
-          min = 0.7,
-          max = 8,
-          step = 0.1
+    tabItems(
+      # Home tab
+      tabItem(
+        tabName = "home",
+        h4(
+          "The Early ICAHT Prediction Models (eIPMs) allow you to predict a
+            patient's probability of developing grade 3-4 early ICAHT based on 
+            pre-lymphodepletion (eIPMPre) and/or early post-infusion (eIPMPost) 
+            factors. Based on the models described in Liang et al., 2024 (under 
+            review)."
         )
       ),
-      box(
-        sliderInput(
-          "plt_pre_ld",
-          label = "Pre-lymphodepletion platelet count (x 10^9/L)",
-          value = 200,
-          min = 25,
-          max = 290,
-          step = 5
+    
+      # eIPMPre tab
+      tabItem(
+        tabName = "eipm_pre",
+        box(valueBoxOutput("eipm_pre_prediction", width = 12)),
+        box(selectInput(
+          "disease_cat",
+          label = "Disease Type",
+          choices = c("ALL", "Other")
+        )),
+        box(
+          sliderInput(
+            "anc_pre_ld",
+            label = "Pre-lymphodepletion ANC (x 10^9/L)",
+            value = 1.5,
+            min = 0.7,
+            max = 8,
+            step = 0.1
+          )
+        ),
+        box(
+          sliderInput(
+            "plt_pre_ld",
+            label = "Pre-lymphodepletion platelet count (x 10^9/L)",
+            value = 200,
+            min = 25,
+            max = 290,
+            step = 5
+          )
+        ),
+        box(
+          sliderInput(
+            "ldh_pre_ld",
+            label = "Pre-lymphodepletion LDH (U/L)",
+            value = 250,
+            min = 115,
+            max = 645,
+            step = 5
+          )
+        ),
+        box(
+          sliderInput(
+            "ferritin_pre_ld",
+            label = "Pre-lymphodepletion ferritin (ng/mL)",
+            value = 300,
+            min = 30,
+            max = 3900,
+            step = 5
+          )
+        ),
+        box(
+          "Input values are limited to those within the 5th-95th percentiles of the training dataset."
         )
       ),
-      box(
-        sliderInput(
-          "ldh_pre_ld",
-          label = "Pre-lymphodepletion LDH (U/L)",
-          value = 250,
-          min = 115,
-          max = 645,
-          step = 5
+    
+      # eIPMPost tab
+      tabItem(
+        tabName = "eipm_post",
+        box(valueBoxOutput("eipm_post_prediction", width = 12)),
+        box(selectInput(
+          "disease_cat",
+          label = "Disease Type",
+          choices = c("ALL", "Other")
+        )),
+        box(
+          sliderInput(
+            "anc_pre_ld",
+            label = "Pre-lymphodepletion ANC (x 10^9/L)",
+            value = 1.5,
+            min = 0.7,
+            max = 8,
+            step = 0.1
+          )
+        ),
+        box(
+          sliderInput(
+            "plt_pre_ld",
+            label = "Pre-lymphodepletion platelet count (x 10^9/L)",
+            value = 200,
+            min = 25,
+            max = 290,
+            step = 5
+          )
+        ),
+        box(
+          sliderInput(
+            "ldh_pre_ld",
+            label = "Pre-lymphodepletion LDH (U/L)",
+            value = 250,
+            min = 115,
+            max = 645,
+            step = 5
+          )
+        ),
+        box(
+          sliderInput(
+            "ferritin_day_3",
+            label = "Day +3 ferritin (ng/mL)",
+            value = 300,
+            min = 70,
+            max = 4930,
+            step = 5
+          )
+        ),
+        box(
+          "Input values are limited to those within the 5th-95th percentiles of the training dataset."
         )
-      ),
-      box(
-        sliderInput(
-          "ferritin_day_3",
-          label = "Day +3 ferritin (ng/mL)",
-          value = 300,
-          min = 70,
-          max = 4930,
-          step = 5
-        )
-      ),
-      box(
-        "Input values are limited to those within the 5th-95th percentiles of the training dataset."
-      )
     )
   ))
 )
