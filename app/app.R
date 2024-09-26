@@ -4,6 +4,8 @@ library(tidyverse)
 library(tidymodels)
 library(glmnet)
 
+addResourcePath('assets', 'www')
+
 # Load models
 eipm_pre <- readRDS("eIPMPre.rds")
 eipm_post <- readRDS("eIPMPost.rds")
@@ -17,7 +19,7 @@ ui <- dashboardPage(
     title = tags$a(
       href='https://hutchdatascience.org',
       tags$img(
-        src='assets/fhLogo.png',
+        src='/assets/fhLogo.png',
         height='35px',
         width='155px'
       )
@@ -37,6 +39,24 @@ ui <- dashboardPage(
   dashboardBody(
     
     includeCSS("www/hutch_theme.css"),
+    tags$head(tags$title("Early ICAHT Prediction")),
+    
+    tags$head(tags$style(HTML(
+      '.myClass { 
+        font-size: 20px;
+        line-height: 50px;
+        text-align: left;
+        font-family: "Arial",Helvetica,Arial,sans-serif;
+        padding: 0 15px;
+        overflow: hidden;
+        color: white;
+      }
+    '))),
+    tags$script(HTML('
+      $(document).ready(function() {
+        $("header").find("nav").append(\'<span class="myClass"> Early ICAHT Prediction </span>\');
+      })
+     ')),
     
     tabItems(
       # Home tab
