@@ -82,8 +82,7 @@ ui <- dashboardPage(
               <a href="https://github.com/FredHutch/eipm-calculator">
               GitHub repo</a>.')
             )
-          )
-        ),
+          ),
           box(
             width = 12, solidHeader = TRUE,
             title = HTML("eIPM<sub>Pre</sub>"),
@@ -102,6 +101,7 @@ ui <- dashboardPage(
                 pre-LD LDH, and day +3 ferritin.")
             )
           )
+        )
         ),
     
       # eIPMPre tab
@@ -303,7 +303,7 @@ server <- function(input, output, session) {
           "anc_day_3" = NA,
           "plt_pre_ld" = input$plt_pre_ld1 |> isolate(),
           "plt_day_3" = NA,
-          "ldh_pre_ld" = input$ldh_pre_ld1 |> isolate(),
+          "ldh_pre_ld" = input$plt_pre_ld1 |> isolate(),
           "ferritin_pre_ld" = input$ferritin_pre_ld1 |> isolate(),
           "ferritin_day_0" = NA,
           "ferritin_day_3" = NA,
@@ -320,7 +320,7 @@ server <- function(input, output, session) {
         
         # Generate predictions
         prediction <- predict(eipm_pre, df, type = "prob")
-        probability <- round(100 * prediction$.pred_1, 0)
+        probability <- round(100 * prediction$.pred_1, 0) 
         
         valueBox(
           value = paste0(probability, "%"),
@@ -354,7 +354,7 @@ server <- function(input, output, session) {
     input$calculateNowPost,
     {
       # require valid inputs
-      # req(iv$is_valid())
+       req(iv_post$is_valid())
       
       output$eipm_post_prediction <- renderValueBox({
         # Create dataframe using input variables
