@@ -9,4 +9,4 @@ The eIPMs use regression models developed by Liang et al. to quickly evaluate th
 
 ### Contact
 
-To report any bugs, submit patches, or request new features, please log an issue in our [issue tracker](https://github.com/FredHutch/eipm-calculator/issues). For direct inquiries, please send an email to YOUR CONTACT HERE at [EMAIL\@fredhutch.org](mailto:EMAIL@fredhutch.org).
+To report any bugs, submit patches, or request new features, please log an issue in our [issue tracker](https://github.com/FredHutch/eipm-calculator/issues). For direct inquiries, please send an email to Jordan Gauthier at [jgauthier\@fredhutch.org](mailto:jgauthier@fredhutch.org).
