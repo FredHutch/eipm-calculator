@@ -1,5 +1,6 @@
 library(shiny)
 library(shinydashboard)
+library(shinyvalidate)
 library(tidyverse)
 library(tidymodels)
 library(glmnet)
@@ -10,222 +11,407 @@ eipm_post <- readRDS("eIPMPost.rds")
 
 # Create UI
 ui <- dashboardPage(
-  dashboardHeader(title = "Early ICAHT Prediction"),
+  
+  title = "Early ICAHT Prediction",
+  
+  dashboardHeader(
+    title = tags$a(
+      href='https://hutchdatascience.org',
+      tags$img(
+        src='/fhLogo.png',
+        height='35px',
+        width='155px'
+      )
+    )
+  ),
   
   # Sidebar with menu items
-  dashboardSidebar(sidebarMenu(
-    menuItem("Home", tabName = "home"),
-    menuItem("eIPMPre", tabName = "eipm_pre"),
-    menuItem("eIPMPost", tabName = "eipm_post")
-  )),
+  dashboardSidebar(
+    sidebarMenu(
+    menuItem("Home", tabName = "home", icon = icon("book")),
+    menuItem(HTML("eIPM<sub>Pre</sub>"), tabName = "pre", icon = icon("calculator")),
+    menuItem(HTML("eIPM<sub>Post</sub>"), tabName = "post", icon = icon("calculator"))
+  )
+  ),
   
   # Tab items
-  dashboardBody(tabItems(
-    # Home tab
-    tabItem(
-      tabName = "home",
-      h4(
-        "The Early ICAHT Prediction Models (eIPMs) allow you to predict a
-          patient's probability of developing grade 3-4 early ICAHT based on pre-lymphodepletion (eIPMPre)
-          and/or early post-infusion (eIPMPost) factors. Based on the models described in Liang et al., 2024."
-      )
-    ),
+  dashboardBody(
     
-    # eIPMPre tab
-    tabItem(
-      tabName = "eipm_pre",
-      box(valueBoxOutput("eipm_pre_prediction", width = 12)),
-      box(selectInput(
-        "disease_cat",
-        label = "Disease Type",
-        choices = c("ALL", "Other")
-      )),
-      box(
-        sliderInput(
-          "anc_pre_ld",
-          label = "Pre-lymphodepletion ANC (x 10^9/L)",
-          value = 1.5,
-          min = 0.7,
-          max = 8,
-          step = 0.1
-        )
-      ),
-      box(
-        sliderInput(
-          "plt_pre_ld",
-          label = "Pre-lymphodepletion platelet count (x 10^9/L)",
-          value = 200,
-          min = 25,
-          max = 290,
-          step = 5
-        )
-      ),
-      box(
-        sliderInput(
-          "ldh_pre_ld",
-          label = "Pre-lymphodepletion LDH (U/L)",
-          value = 250,
-          min = 115,
-          max = 645,
-          step = 5
-        )
-      ),
-      box(
-        sliderInput(
-          "ferritin_pre_ld",
-          label = "Pre-lymphodepletion ferritin (ng/mL)",
-          value = 300,
-          min = 30,
-          max = 3900,
-          step = 5
-        )
-      ),
-      box(
-        "Input values are limited to those within the 5th-95th percentiles of the training dataset."
-      )
-    ),
+    includeCSS("www/hutch_theme.css"),
+    tags$head(tags$title("Early ICAHT Prediction")),
     
-    # eIPMPost tab
-    tabItem(
-      tabName = "eipm_post",
-      box(valueBoxOutput("eipm_post_prediction", width = 12)),
-      box(selectInput(
-        "disease_cat",
-        label = "Disease Type",
-        choices = c("ALL", "Other")
-      )),
-      box(
-        sliderInput(
-          "anc_pre_ld",
-          label = "Pre-lymphodepletion ANC (x 10^9/L)",
-          value = 1.5,
-          min = 0.7,
-          max = 8,
-          step = 0.1
+    tags$head(tags$style(HTML(
+      '.myClass { 
+        font-size: 20px;
+        line-height: 50px;
+        text-align: left;
+        font-family: "Arial",Helvetica,Arial,sans-serif;
+        padding: 0 15px;
+        overflow: hidden;
+        color: white;
+      }
+    '))),
+    tags$script(HTML('
+      $(document).ready(function() {
+        $("header").find("nav").append(\'<span class="myClass"> Early ICAHT Prediction </span>\');
+      })
+     ')),
+    
+    tabItems(
+      # Home tab
+      tabItem(
+        tabName = "home",
+        
+        fluidRow(
+          box(
+            width = 12, solidHeader = TRUE,
+            title = "About",
+            p(
+              HTML('The Early ICAHT Prediction Models (eIPMs) allow you to predict 
+              a patient\'s probability of developing grade 3-4 early ICAHT based 
+              on pre-lymphodepletion and/or early post-infusion factors.
+              <br><br>
+              Additional information on the development and performance of these 
+              models can be found in the manuscript: <em>Liang EC et al. Development 
+              and validation of predictive models of early immune effector 
+              cell-associated hematotoxicity (eIPMs). Under review</em>.
+              <br><br>
+              This application was developed in partnership with the Fred 
+              Hutch Data Science Lab (DaSL). For more information, or to report
+              an issue, please go to the
+              <a href="https://github.com/FredHutch/eipm-calculator">
+              GitHub repo</a>.')
+            )
+          ),
+          box(
+            width = 12, solidHeader = TRUE,
+            title = HTML("eIPM<sub>Pre</sub>"),
+            p(
+              HTML("eIPM<sub>Pre</sub> consists of disease type (ALL vs. other), 
+              pre-lymphodepletion (LD) absolute neutrophil count, pre-LD platelet
+              count, pre-LD LDH, and pre-LD ferritin.")
+            )
+          ),
+          box(
+            width = 12, solidHeader = TRUE,
+            title = HTML("eIPM<sub>Post</sub>"),
+            p(
+              HTML("eIPM<sub>Post</sub> consists of 
+                disease type (ALL vs. other), pre-LD ANC, pre-LD platelet count, 
+                pre-LD LDH, and day +3 ferritin.")
+            )
+          )
         )
-      ),
-      box(
-        sliderInput(
-          "plt_pre_ld",
-          label = "Pre-lymphodepletion platelet count (x 10^9/L)",
-          value = 200,
-          min = 25,
-          max = 290,
-          step = 5
+        ),
+    
+      # eIPMPre tab
+      tabItem(
+        tabName = "pre",
+
+        fluidRow(
+            box(
+              selectInput(
+                "disease_cat1",
+                label = "Disease Type",
+                choices = c("ALL", "Other")
+              ),
+              numericInput(
+                "anc_pre_ld1",
+                label = HTML(paste0("Pre-lymphodepletion ANC (x10",tags$sup("9"), '/μL)')),
+                value = NULL,
+                min = 0.7,
+                max = 8
+              ),
+              numericInput(
+                "plt_pre_ld1",
+                label = HTML(paste0("Pre-lymphodepletion platelet count (x10",tags$sup("9"), '/μL)')),
+                value = NULL,
+                min = 25,
+                max = 290
+              ),
+              numericInput(
+                "ldh_pre_ld1",
+                label = "Pre-lymphodepletion LDH (U/L)",
+                value = NULL,
+                min = 115,
+                max = 645
+              ),
+              numericInput(
+                "ferritin_pre_ld1",
+                label = "Pre-lymphodepletion ferritin (ng/mL)",
+                value = NULL,
+                min = 30,
+                max = 3900
+              ),
+              p("Input values are limited to those within the 5th-95th percentiles of the training dataset."),
+              actionButton(inputId = "calculateNowPre", label = strong("Calculate")),
+              actionButton(inputId = "resetPre", label = strong("Reset"))
+            ),
+            box(valueBoxOutput("eipm_pre_prediction", width = 12))
+
         )
+        
+
       ),
-      box(
-        sliderInput(
-          "ldh_pre_ld",
-          label = "Pre-lymphodepletion LDH (U/L)",
-          value = 250,
-          min = 115,
-          max = 645,
-          step = 5
+    
+      # eIPMPost tab
+      tabItem(
+        tabName = "post",
+        
+        fluidRow(
+          box(
+            selectInput(
+              "disease_cat2",
+              label = "Disease Type",
+              choices = c("ALL", "Other")
+            ),
+            numericInput(
+              "anc_pre_ld2",
+              label = HTML(paste0("Pre-lymphodepletion ANC (x10",tags$sup("9"), '/μL)')),
+              value = NULL,
+              min = 0.7,
+              max = 8
+            ),
+            numericInput(
+              "plt_pre_ld2",
+              label = HTML(paste0("Pre-lymphodepletion platelet count (x10",tags$sup("9"), '/μL)')),
+              value = NULL,
+              min = 25,
+              max = 290
+            ),
+            numericInput(
+              "ldh_pre_ld2",
+              label = "Pre-lymphodepletion LDH (U/L)",
+              value = NULL,
+              min = 115,
+              max = 645
+            ),
+            numericInput(
+              "ferritin_day_3",
+              label = "Day +3 ferritin (ng/mL)",
+              value = NULL,
+              min = 70,
+              max = 4930
+            ),
+            p("Input values are limited to those within the 5th-95th percentiles of the training dataset."),
+            actionButton(inputId = "calculateNowPost", label = strong("Calculate")),
+            actionButton(inputId = "resetPost", label = strong("Reset"))
+          ),
+          box(valueBoxOutput("eipm_post_prediction", width = 12))
         )
-      ),
-      box(
-        sliderInput(
-          "ferritin_day_3",
-          label = "Day +3 ferritin (ng/mL)",
-          value = 300,
-          min = 70,
-          max = 4930,
-          step = 5
-        )
-      ),
-      box(
-        "Input values are limited to those within the 5th-95th percentiles of the training dataset."
-      )
+        
     )
   ))
 )
 
-server <- function(input, output) {
-  # eIPMPre output
+server <- function(input, output, session) {
+  
+  # blank eipm_pre box
   output$eipm_pre_prediction <- renderValueBox({
-    # Create dataframe using input variables (and dummy/NA variables for non-predictors)
-    df <- tibble(
-      "disease_cat" = input$disease_cat,
-      "bridging_yn" = NA,
-      "LD_regimen_low_CyFlu_vs_other" = NA,
-      "anc_pre_ld" = input$anc_pre_ld,
-      "anc_day_3" = NA,
-      "plt_pre_ld" = input$plt_pre_ld,
-      "plt_day_3" = NA,
-      "ldh_pre_ld" = input$ldh_pre_ld,
-      "ferritin_pre_ld" = input$ferritin_pre_ld,
-      "ferritin_day_0" = NA,
-      "ferritin_day_3" = NA,
-      "crp_day_3" = NA,
-      "d_dimer_day_3" = NA,
-      "crs_grade" = NA
-    )
-    
-    df <- df %>%
-      mutate(
-        across(anc_pre_ld:d_dimer_day_3, ~ ifelse(. == 0, 0.01, .), .names = "{.col}_log10"),
-        across(anc_pre_ld_log10:d_dimer_day_3_log10, log10)
-      )
-    
-    # Generate predictions
-    prediction <- predict(eipm_pre, df, type = "prob")
-    probability <- round(100 * prediction$.pred_1, 0)
-    
-    # Generate valueBox output
     valueBox(
-      value = paste0(probability, "%"),
+      "%", 
       subtitle = paste0("Probability of grade 3-4 early ICAHT"),
-      color = case_when(
-        probability < 33  ~ "green",
-        probability %in% 33:66 ~ "yellow",
-        probability > 66 ~ "red"
-      )
-    )
-    
+      color = "aqua"
+             ) 
   })
   
-  # eIPMPost output
+  # blank eipm_post box
   output$eipm_post_prediction <- renderValueBox({
-    # Create dataframe using input variables
-    df <- tibble(
-      "disease_cat" = input$disease_cat,
-      "bridging_yn" = NA,
-      "LD_regimen_low_CyFlu_vs_other" = NA,
-      "anc_pre_ld" = input$anc_pre_ld,
-      "anc_day_3" = NA,
-      "plt_pre_ld" = input$plt_pre_ld,
-      "plt_day_3" = NA,
-      "ldh_pre_ld" = input$ldh_pre_ld,
-      "ferritin_pre_ld" = NA,
-      "ferritin_day_0" = NA,
-      "ferritin_day_3" = input$ferritin_day_3,
-      "crp_day_3" = NA,
-      "d_dimer_day_3" = NA,
-      "crs_grade" = NA
-    )
-    
-    df <- df %>%
-      mutate(
-        across(anc_pre_ld:d_dimer_day_3, ~ ifelse(. == 0, 0.01, .), .names = "{.col}_log10"),
-        across(anc_pre_ld_log10:d_dimer_day_3_log10, log10)
-      )
-    
-    # Generate predictions
-    prediction <- predict(eipm_post, df, type = "prob")
-    probability <- round(100 * prediction$.pred_1, 0)
-    
-    # Generate valueBox output
     valueBox(
-      value = paste0(probability, "%"),
+      "%", 
       subtitle = paste0("Probability of grade 3-4 early ICAHT"),
-      color = case_when(
-        probability < 33  ~ "green",
-        probability %in% 33:66 ~ "yellow",
-        probability > 66 ~ "red"
-      )
-    )
+      color = "aqua"
+    ) 
+  })
+  
+  # create an InputValidator object
+  iv_pre <- InputValidator$new()
+  iv_post <- InputValidator$new()
+  
+  # create validation rules - pre
+  iv_pre$add_rule("anc_pre_ld1", sv_required())
+  iv_pre$add_rule("anc_pre_ld1", function(value) {
+    if (value < .7 || value > 8) {
+      "Must be between .7 and 8"
+    }
+  })
+  iv_pre$add_rule("plt_pre_ld1", sv_required())
+  iv_pre$add_rule("plt_pre_ld1", function(value) {
+    if (value < 25 || value > 290) {
+      "Must be between 25 and 290"
+    }
+  })
+  iv_pre$add_rule("ldh_pre_ld1", sv_required())
+  iv_pre$add_rule("ldh_pre_ld1", function(value) {
+    if (value < 115 || value > 645) {
+      "Must be between 115 and 645"
+    }
+  })
+  iv_pre$add_rule("ferritin_pre_ld1", sv_required())
+  iv_pre$add_rule("ferritin_pre_ld1", function(value) {
+    if (value < 30 || value > 3900) {
+      "Must be between 30 and 3900"
+    }
+  })
+  
+  # create validation rules - post
+  iv_post$add_rule("anc_pre_ld2", sv_required())
+  iv_post$add_rule("anc_pre_ld2", function(value) {
+    if (value < .7 || value > 8) {
+      "Must be between .7 and 8"
+    }
+  })
+  iv_post$add_rule("plt_pre_ld2", sv_required())
+  iv_post$add_rule("plt_pre_ld2", function(value) {
+    if (value < 25 || value > 290) {
+      "Must be between 25 and 290"
+    }
+  })
+  iv_post$add_rule("ldh_pre_ld2", sv_required())
+  iv_post$add_rule("ldh_pre_ld2", function(value) {
+    if (value < 115 || value 
+        > 645) {
+      "Must be between 115 and 645"
+    }
+  })
+  iv_post$add_rule("ferritin_day_3", sv_required())
+  iv_post$add_rule("ferritin_day_3", function(value) {
+    if (value < 70 || value > 4930) {
+      "Must be between 70 and 4930"
+    }
+  })
+  
+  # start displaying errors in the UI
+  iv_pre$enable()
+  iv_post$enable()
+  
+  calculate_eipm_pre <- observeEvent(
     
+    input$calculateNowPre,
+    {
+      output$eipm_pre_prediction <- renderValueBox({
+        # require pre values to be valid
+        req(iv_pre$is_valid() |> isolate())
+        
+        # Create data frame using input variables 
+        # (and dummy/NA variables for non-predictors)
+        df <- tibble(
+          "disease_cat" = input$disease_cat1 |> isolate(),
+          "bridging_yn" = NA,
+          "LD_regimen_low_CyFlu_vs_other" = NA,
+          "anc_pre_ld" = input$anc_pre_ld1 |> isolate(),
+          "anc_day_3" = NA,
+          "plt_pre_ld" = input$plt_pre_ld1 |> isolate(),
+          "plt_day_3" = NA,
+          "ldh_pre_ld" = input$plt_pre_ld1 |> isolate(),
+          "ferritin_pre_ld" = input$ferritin_pre_ld1 |> isolate(),
+          "ferritin_day_0" = NA,
+          "ferritin_day_3" = NA,
+          "crp_day_3" = NA,
+          "d_dimer_day_3" = NA,
+          "crs_grade" = NA
+        )
+        
+        df <- df |>
+          mutate(
+            across(anc_pre_ld:d_dimer_day_3, ~ ifelse(. == 0, 0.01, .), .names = "{.col}_log10"),
+            across(anc_pre_ld_log10:d_dimer_day_3_log10, log10)
+          )
+        
+        # Generate predictions
+        prediction <- predict(eipm_pre, df, type = "prob")
+        probability <- round(100 * prediction$.pred_1, 0) 
+        
+        valueBox(
+          value = paste0(probability, "%"),
+          subtitle = paste0("Probability of grade 3-4 early ICAHT"),
+          color = case_when(
+            probability < 33  ~ "green",
+            probability %in% 33:66 ~ "yellow",
+            probability > 66 ~ "red",
+            TRUE ~ "aqua"
+            )
+          )
+      })
+      
+    }
+    
+  )
+  
+ # Hitting the reset button will clear all values
+  observeEvent(input$resetPre, {
+    updateSelectInput(session,"disease_cat1", selected = "ALL")
+    updateNumericInput(session, "anc_pre_ld1", value = NA)
+    updateNumericInput(session, "plt_pre_ld1", value = NA)
+    updateNumericInput(session, "ldh_pre_ld1", value = NA)
+    updateNumericInput(session, "ferritin_pre_ld1", value = NA)
+    output$eipm_pre_prediction <- renderValueBox({
+      valueBox("%", subtitle = paste0("Probability of grade 3-4 early ICAHT")) 
+      })
+  })
+  
+  calculate_eipm_post <- observeEvent(
+    input$calculateNowPost,
+    {
+      # require valid inputs
+       req(iv_post$is_valid() |> isolate())
+      
+      output$eipm_post_prediction <- renderValueBox({
+        # Create dataframe using input variables
+        df <- tibble(
+          "disease_cat" = input$disease_cat2 |> isolate(),
+          "bridging_yn" = NA,
+          "LD_regimen_low_CyFlu_vs_other" = NA,
+          "anc_pre_ld" = input$anc_pre_ld2 |> isolate(),
+          "anc_day_3" = NA,
+          "plt_pre_ld" = input$plt_pre_ld2 |> isolate(),
+          "plt_day_3" = NA,
+          "ldh_pre_ld" = input$ldh_pre_ld2 |> isolate(),
+          "ferritin_pre_ld" = NA,
+          "ferritin_day_0" = NA,
+          "ferritin_day_3" = input$ferritin_day_3 |> isolate(),
+          "crp_day_3" = NA,
+          "d_dimer_day_3" = NA,
+          "crs_grade" = NA
+        )
+        
+        df <- df |>
+          mutate(
+            across(anc_pre_ld:d_dimer_day_3, ~ ifelse(. == 0, 0.01, .), .names = "{.col}_log10"),
+            across(anc_pre_ld_log10:d_dimer_day_3_log10, log10)
+          )
+        
+        # Generate predictions
+        prediction <- predict(eipm_post, df, type = "prob")
+        probability <- round(100 * prediction$.pred_1, 0)
+        
+        # Generate valueBox output
+        valueBox(
+          value = paste0(probability, "%"),
+          subtitle = paste0("Probability of grade 3-4 early ICAHT"),
+          color = case_when(
+            probability < 33  ~ "green",
+            probability %in% 33:66 ~ "yellow",
+            probability > 66 ~ "red",
+            TRUE ~ "aqua"
+          )
+        )
+        
+      })
+  
+    }
+  )
+  
+  # Hitting the reset button will clear all values
+  observeEvent(input$resetPost, {
+    updateSelectInput(session,"disease_cat2", selected = "ALL")
+    updateNumericInput(session, "anc_pre_ld2", value = NA)
+    updateNumericInput(session, "plt_pre_ld2", value = NA)
+    updateNumericInput(session, "ldh_pre_ld2", value = NA)
+    updateNumericInput(session, "ferritin_day_3", value = NA)
+    output$eipm_post_prediction <- renderValueBox({
+      valueBox("%", subtitle = paste0("Probability of grade 3-4 early ICAHT")) 
+    })
   })
   
 }
