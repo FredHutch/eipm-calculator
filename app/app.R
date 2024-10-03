@@ -61,26 +61,48 @@ ui <- dashboardPage(
       # Home tab
       tabItem(
         tabName = "home",
-        markdown("The Early ICAHT Prediction Models (eIPMs) allow you to predict 
-        a patient's probability of developing grade 3-4 early ICAHT based on 
-        pre-lymphodepletion and/or early post-infusion factors.
         
-        eIPM<sub>Pre</sub> consists of disease type (ALL vs. other), 
-        pre-lymphodepletion (LD) absolute neutrophil count, pre-LD platelet
-        count, pre-LD LDH, and pre-LD ferritin. eIPM<sub>Post</sub> consists of 
-        disease type (ALL vs. other), pre-LD ANC, pre-LD platelet count, pre-LD
-        LDH, and day +3 ferritin.
-        
-        Additional information on the development and performance of these 
-        models can be found in the manuscript: Liang EC et al. Development and 
-        validation of predictive models of early immune effector cell-associated 
-        hematotoxicity (eIPMs). Under review.
-        
-        The Shiny application was developed in partnership with the Fred Hutch 
-        Data Science Lab (DaSL). Please report issues on 
-        [GitHub](https://github.com/FredHutch/eipm-calculator)."
-        )
-      ),
+        fluidRow(
+          box(
+            width = 12, solidHeader = TRUE,
+            title = "About",
+            p(
+              HTML('The Early ICAHT Prediction Models (eIPMs) allow you to predict 
+              a patient\'s probability of developing grade 3-4 early ICAHT based 
+              on pre-lymphodepletion and/or early post-infusion factors.
+              <br><br>
+              Additional information on the development and performance of these 
+              models can be found in the manuscript: <em>Liang EC et al. Development 
+              and validation of predictive models of early immune effector 
+              cell-associated hematotoxicity (eIPMs). Under review</em>.
+              <br><br>
+              This application was developed in partnership with the Fred 
+              Hutch Data Science Lab (DaSL). For more information, or to report
+              an issue, please go to the
+              <a href="https://github.com/FredHutch/eipm-calculator">
+              GitHub repo</a>.')
+            )
+          )
+        ),
+          box(
+            width = 12, solidHeader = TRUE,
+            title = HTML("eIPM<sub>Pre</sub>"),
+            p(
+              HTML("eIPM<sub>Pre</sub> consists of disease type (ALL vs. other), 
+              pre-lymphodepletion (LD) absolute neutrophil count, pre-LD platelet
+              count, pre-LD LDH, and pre-LD ferritin.")
+            )
+          ),
+          box(
+            width = 12, solidHeader = TRUE,
+            title = HTML("eIPM<sub>Post</sub>"),
+            p(
+              HTML("eIPM<sub>Post</sub> consists of 
+                disease type (ALL vs. other), pre-LD ANC, pre-LD platelet count, 
+                pre-LD LDH, and day +3 ferritin.")
+            )
+          )
+        ),
     
       # eIPMPre tab
       tabItem(
