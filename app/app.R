@@ -183,120 +183,138 @@ ui <- dashboardPage(
 )
 
 server <- function(input, output, session) {
-  # validation
-  iv <- InputValidator$new()
-  # validation - pre
-  iv$add_rule("anc_pre_ld1", sv_required())
-  iv$add_rule("anc_pre_ld1", function(value) {
+  
+  # blank eipm_pre box
+  output$eipm_pre_prediction <- renderValueBox({
+    valueBox(
+      "%", 
+      subtitle = paste0("Probability of grade 3-4 early ICAHT"),
+      color = "aqua"
+             ) 
+  })
+  
+  # blank eipm_post box
+  output$eipm_post_prediction <- renderValueBox({
+    valueBox(
+      "%", 
+      subtitle = paste0("Probability of grade 3-4 early ICAHT"),
+      color = "aqua"
+    ) 
+  })
+  
+  # create an InputValidator object
+  iv_pre <- InputValidator$new()
+  iv_post <- InputValidator$new()
+  
+  # create validation rules - pre
+  iv_pre$add_rule("anc_pre_ld1", sv_required())
+  iv_pre$add_rule("anc_pre_ld1", function(value) {
     if (value < .7 || value > 8) {
       "Must be between .7 and 8"
     }
   })
-  iv$add_rule("plt_pre_ld1", sv_required())
-  iv$add_rule("plt_pre_ld1", function(value) {
+  iv_pre$add_rule("plt_pre_ld1", sv_required())
+  iv_pre$add_rule("plt_pre_ld1", function(value) {
     if (value < 25 || value > 290) {
       "Must be between 25 and 290"
     }
   })
-  iv$add_rule("ldh_pre_ld1", sv_required())
-  iv$add_rule("ldh_pre_ld1", function(value) {
+  iv_pre$add_rule("ldh_pre_ld1", sv_required())
+  iv_pre$add_rule("ldh_pre_ld1", function(value) {
     if (value < 115 || value > 645) {
       "Must be between 115 and 645"
     }
   })
-  iv$add_rule("ferritin_pre_ld1", sv_required())
-  iv$add_rule("ferritin_pre_ld1", function(value) {
+  iv_pre$add_rule("ferritin_pre_ld1", sv_required())
+  iv_pre$add_rule("ferritin_pre_ld1", function(value) {
     if (value < 30 || value > 3900) {
       "Must be between 30 and 3900"
     }
   })
   
-  # validation - post
-  iv$add_rule("anc_pre_ld2", sv_required())
-  iv$add_rule("anc_pre_ld2", function(value) {
+  # create validation rules - post
+  iv_post$add_rule("anc_pre_ld2", sv_required())
+  iv_post$add_rule("anc_pre_ld2", function(value) {
     if (value < .7 || value > 8) {
       "Must be between .7 and 8"
     }
   })
-  iv$add_rule("plt_pre_ld2", sv_required())
-  iv$add_rule("plt_pre_ld2", function(value) {
+  iv_post$add_rule("plt_pre_ld2", sv_required())
+  iv_post$add_rule("plt_pre_ld2", function(value) {
     if (value < 25 || value > 290) {
       "Must be between 25 and 290"
     }
   })
-  iv$add_rule("ldh_pre_ld2", sv_required())
-  iv$add_rule("ldh_pre_ld2", function(value) {
+  iv_post$add_rule("ldh_pre_ld2", sv_required())
+  iv_post$add_rule("ldh_pre_ld2", function(value) {
     if (value < 115 || value 
         > 645) {
       "Must be between 115 and 645"
     }
   })
-  iv$add_rule("ferritin_day_3", sv_required())
-  iv$add_rule("ferritin_day_3", function(value) {
+  iv_post$add_rule("ferritin_day_3", sv_required())
+  iv_post$add_rule("ferritin_day_3", function(value) {
     if (value < 70 || value > 4930) {
       "Must be between 70 and 4930"
     }
   })
   
-  iv$enable()
+  # start displaying errors in the UI
+  iv_pre$enable()
+  iv_post$enable()
   
-  calculate_eipm_pre <- eventReactive(
+  calculate_eipm_pre <- observeEvent(
     
     input$calculateNowPre,
     {
-      # require valid inputs
-      req(iv$is_valid())
-      
-      # Create data frame using input variables 
-      # (and dummy/NA variables for non-predictors)
-      df <- tibble(
-        "disease_cat" = input$disease_cat1,
-        "bridging_yn" = NA,
-        "LD_regimen_low_CyFlu_vs_other" = NA,
-        "anc_pre_ld" = input$anc_pre_ld1,
-        "anc_day_3" = NA,
-        "plt_pre_ld" = input$plt_pre_ld1,
-        "plt_day_3" = NA,
-        "ldh_pre_ld" = input$ldh_pre_ld1,
-        "ferritin_pre_ld" = input$ferritin_pre_ld1,
-        "ferritin_day_0" = NA,
-        "ferritin_day_3" = NA,
-        "crp_day_3" = NA,
-        "d_dimer_day_3" = NA,
-        "crs_grade" = NA
-      )
-      
-      df <- df |>
-        mutate(
-          across(anc_pre_ld:d_dimer_day_3, ~ ifelse(. == 0, 0.01, .), .names = "{.col}_log10"),
-          across(anc_pre_ld_log10:d_dimer_day_3_log10, log10)
+      output$eipm_pre_prediction <- renderValueBox({
+        # require pre values to be valid
+        req(iv_pre$is_valid())
+        
+        # Create data frame using input variables 
+        # (and dummy/NA variables for non-predictors)
+        df <- tibble(
+          "disease_cat" = input$disease_cat1 |> isolate(),
+          "bridging_yn" = NA,
+          "LD_regimen_low_CyFlu_vs_other" = NA,
+          "anc_pre_ld" = input$anc_pre_ld1 |> isolate(),
+          "anc_day_3" = NA,
+          "plt_pre_ld" = input$plt_pre_ld1 |> isolate(),
+          "plt_day_3" = NA,
+          "ldh_pre_ld" = input$ldh_pre_ld1 |> isolate(),
+          "ferritin_pre_ld" = input$ferritin_pre_ld1 |> isolate(),
+          "ferritin_day_0" = NA,
+          "ferritin_day_3" = NA,
+          "crp_day_3" = NA,
+          "d_dimer_day_3" = NA,
+          "crs_grade" = NA
         )
+        
+        df <- df |>
+          mutate(
+            across(anc_pre_ld:d_dimer_day_3, ~ ifelse(. == 0, 0.01, .), .names = "{.col}_log10"),
+            across(anc_pre_ld_log10:d_dimer_day_3_log10, log10)
+          )
+        
+        # Generate predictions
+        prediction <- predict(eipm_pre, df, type = "prob")
+        probability <- round(100 * prediction$.pred_1, 0)
+        
+        valueBox(
+          value = paste0(probability, "%"),
+          subtitle = paste0("Probability of grade 3-4 early ICAHT"),
+          color = case_when(
+            probability < 33  ~ "green",
+            probability %in% 33:66 ~ "yellow",
+            probability > 66 ~ "red",
+            TRUE ~ "aqua"
+            )
+          )
+      })
       
-      # Generate predictions
-      prediction <- predict(eipm_pre, df, type = "prob")
-      probability <- round(100 * prediction$.pred_1, 0)
-      
-      probability
     }
+    
   )
-  
-  
-  # eIPMPre output
-  output$eipm_pre_prediction <- renderValueBox({
-    
-    probability_pre <- calculate_eipm_pre()
-    
-    # Generate valueBox output
-    valueBox(
-      value = paste0(probability_pre, "%"),
-      subtitle = paste0("Probability of grade 3-4 early ICAHT"),
-      color = case_when(
-        probability_pre < 33  ~ "green",
-        probability_pre %in% 33:66 ~ "yellow",
-        probability_pre > 66 ~ "red"
-      )
-    )
-  })
   
  # Hitting the reset button will clear all values
   observeEvent(input$resetPre, {
@@ -309,64 +327,58 @@ server <- function(input, output, session) {
       valueBox("%", subtitle = paste0("Probability of grade 3-4 early ICAHT")) 
       })
   })
- 
-  calculate_eipm_post <- eventReactive(
+  
+  calculate_eipm_post <- observeEvent(
     input$calculateNowPost,
     {
       # require valid inputs
-      req(iv$is_valid())
+      # req(iv$is_valid())
       
-      # Create dataframe using input variables
-      df <- tibble(
-        "disease_cat" = input$disease_cat2,
-        "bridging_yn" = NA,
-        "LD_regimen_low_CyFlu_vs_other" = NA,
-        "anc_pre_ld" = input$anc_pre_ld2,
-        "anc_day_3" = NA,
-        "plt_pre_ld" = input$plt_pre_ld2,
-        "plt_day_3" = NA,
-        "ldh_pre_ld" = input$ldh_pre_ld2,
-        "ferritin_pre_ld" = NA,
-        "ferritin_day_0" = NA,
-        "ferritin_day_3" = input$ferritin_day_3,
-        "crp_day_3" = NA,
-        "d_dimer_day_3" = NA,
-        "crs_grade" = NA
-      )
-      
-      df <- df |>
-        mutate(
-          across(anc_pre_ld:d_dimer_day_3, ~ ifelse(. == 0, 0.01, .), .names = "{.col}_log10"),
-          across(anc_pre_ld_log10:d_dimer_day_3_log10, log10)
+      output$eipm_post_prediction <- renderValueBox({
+        # Create dataframe using input variables
+        df <- tibble(
+          "disease_cat" = input$disease_cat2 |> isolate(),
+          "bridging_yn" = NA,
+          "LD_regimen_low_CyFlu_vs_other" = NA,
+          "anc_pre_ld" = input$anc_pre_ld2 |> isolate(),
+          "anc_day_3" = NA,
+          "plt_pre_ld" = input$plt_pre_ld2 |> isolate(),
+          "plt_day_3" = NA,
+          "ldh_pre_ld" = input$ldh_pre_ld2 |> isolate(),
+          "ferritin_pre_ld" = NA,
+          "ferritin_day_0" = NA,
+          "ferritin_day_3" = input$ferritin_day_3 |> isolate(),
+          "crp_day_3" = NA,
+          "d_dimer_day_3" = NA,
+          "crs_grade" = NA
         )
-      
-      # Generate predictions
-      prediction <- predict(eipm_post, df, type = "prob")
-      probability <- round(100 * prediction$.pred_1, 0)
-      
-      probability
+        
+        df <- df |>
+          mutate(
+            across(anc_pre_ld:d_dimer_day_3, ~ ifelse(. == 0, 0.01, .), .names = "{.col}_log10"),
+            across(anc_pre_ld_log10:d_dimer_day_3_log10, log10)
+          )
+        
+        # Generate predictions
+        prediction <- predict(eipm_post, df, type = "prob")
+        probability <- round(100 * prediction$.pred_1, 0)
+        
+        # Generate valueBox output
+        valueBox(
+          value = paste0(probability, "%"),
+          subtitle = paste0("Probability of grade 3-4 early ICAHT"),
+          color = case_when(
+            probability < 33  ~ "green",
+            probability %in% 33:66 ~ "yellow",
+            probability > 66 ~ "red",
+            TRUE ~ "aqua"
+          )
+        )
+        
+      })
   
     }
-    
   )
-  
-  # eIPMPost output
-  output$eipm_post_prediction <- renderValueBox({
- 
-    probability_post <- calculate_eipm_post()
-    
-    # Generate valueBox output
-    valueBox(
-      value = paste0(probability_post, "%"),
-      subtitle = paste0("Probability of grade 3-4 early ICAHT"),
-      color = case_when(
-        probability_post < 33  ~ "green",
-        probability_post %in% 33:66 ~ "yellow",
-        probability_post > 66 ~ "red"
-      )
-    )
-    
-  })
   
   # Hitting the reset button will clear all values
   observeEvent(input$resetPost, {
