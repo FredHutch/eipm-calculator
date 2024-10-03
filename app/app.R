@@ -291,7 +291,7 @@ server <- function(input, output, session) {
     {
       output$eipm_pre_prediction <- renderValueBox({
         # require pre values to be valid
-        req(iv_pre$is_valid())
+        req(iv_pre$is_valid() |> isolate())
         
         # Create data frame using input variables 
         # (and dummy/NA variables for non-predictors)
@@ -354,7 +354,7 @@ server <- function(input, output, session) {
     input$calculateNowPost,
     {
       # require valid inputs
-       req(iv_post$is_valid())
+       req(iv_post$is_valid() |> isolate())
       
       output$eipm_post_prediction <- renderValueBox({
         # Create dataframe using input variables
