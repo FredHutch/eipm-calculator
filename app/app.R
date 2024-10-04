@@ -206,7 +206,7 @@ ui <- dashboardPage(
 
 server <- function(input, output, session) {
   
-  # blank eipm_pre box
+  # Create blank eIPMPre box
   output$eipm_pre_prediction <- renderValueBox({
     valueBox(
       "%", 
@@ -215,7 +215,7 @@ server <- function(input, output, session) {
              ) 
   })
   
-  # blank eipm_post box
+  # Create blank eIPMPost box
   output$eipm_post_prediction <- renderValueBox({
     valueBox(
       "%", 
@@ -224,11 +224,11 @@ server <- function(input, output, session) {
     ) 
   })
   
-  # create an InputValidator object
+  # Create an InputValidator object
   iv_pre <- InputValidator$new()
   iv_post <- InputValidator$new()
   
-  # create validation rules - pre
+  # Create validation rules for eIPMPre
   iv_pre$add_rule("anc_pre_ld1", sv_required())
   iv_pre$add_rule("anc_pre_ld1", function(value) {
     if (value < .7 || value > 8) {
@@ -254,7 +254,7 @@ server <- function(input, output, session) {
     }
   })
   
-  # create validation rules - post
+  # Create validation rules for eIPMPost
   iv_post$add_rule("anc_pre_ld2", sv_required())
   iv_post$add_rule("anc_pre_ld2", function(value) {
     if (value < .7 || value > 8) {
@@ -281,7 +281,7 @@ server <- function(input, output, session) {
     }
   })
   
-  # start displaying errors in the UI
+  # Turn on InputValidator
   iv_pre$enable()
   iv_post$enable()
   
@@ -290,7 +290,7 @@ server <- function(input, output, session) {
     input$calculateNowPre,
     {
       output$eipm_pre_prediction <- renderValueBox({
-        # require pre values to be valid
+        # Require eIPMPre values to be valid
         req(iv_pre$is_valid() |> isolate())
         
         # Create data frame using input variables 
@@ -303,7 +303,7 @@ server <- function(input, output, session) {
           "anc_day_3" = NA,
           "plt_pre_ld" = input$plt_pre_ld1 |> isolate(),
           "plt_day_3" = NA,
-          "ldh_pre_ld" = input$plt_pre_ld1 |> isolate(),
+          "ldh_pre_ld" = input$ldh_pre_ld1 |> isolate(),
           "ferritin_pre_ld" = input$ferritin_pre_ld1 |> isolate(),
           "ferritin_day_0" = NA,
           "ferritin_day_3" = NA,
@@ -353,7 +353,7 @@ server <- function(input, output, session) {
   calculate_eipm_post <- observeEvent(
     input$calculateNowPost,
     {
-      # require valid inputs
+      # Require valid inputs
        req(iv_post$is_valid() |> isolate())
       
       output$eipm_post_prediction <- renderValueBox({
