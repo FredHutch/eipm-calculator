@@ -72,9 +72,10 @@ ui <- dashboardPage(
               on pre-lymphodepletion and/or early post-infusion factors.
               <br><br>
               Additional information on the development and performance of these 
-              models can be found in the manuscript: <em>Liang EC et al. Development 
+              models can be found in the manuscript: <em>Liang EC et al. <a href= "https://ashpublications.org/bloodadvances/article/doi/10.1182/bloodadvances.2024014455/534304/Development-and-validation-of-predictive-models-of">
+              Development 
               and validation of predictive models of early immune effector 
-              cell-associated hematotoxicity (eIPMs). Under review</em>.
+              cell-associated hematotoxicity (eIPMs)</a>. Blood Advances. 2024. </em>
               <br><br>
               This application was developed in partnership with the Fred 
               Hutch Data Science Lab (DaSL). For more information, or to report
